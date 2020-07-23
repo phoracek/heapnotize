@@ -26,3 +26,43 @@ Add this to your `Cargo.toml`:
 [dependencies]
 bitflags = "1.0"
 ```
+
+First of all, allocate space on the stack for `N` items of your type `T`:
+
+``` rust
+let numbers = heapnotize::Rack::<i32, 16>::new()
+```
+
+Then we can add an item to this memory. The returned value will be a "pointer" on the stored value:
+
+``` rust
+let number_pointer = numbers.add(10) // Unit<i32>
+```
+
+The value can be accessed as a reference:
+
+``` rust
+let number_reference = number.as_ref() // &i32
+```
+
+A mutable reference:
+
+``` rust
+let number_mutable_reference = number.as_mut_ref() // &mut i32
+```
+
+We can also use dereference to move the value out of its unit:
+
+``` rust
+let number = *number // i32
+```
+
+When the value gets dereferenced or the unit gets out of scope, the memory will
+be freed.
+
+We can read capacity of the `Rack` and number of currently occupied slots:
+
+``` rust
+println!("numbers have currently occupied {} out of {} slots", numbers.used(), numbers.capacity())
+```
+
