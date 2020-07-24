@@ -15,6 +15,7 @@ also useful for predictable memory requirements of your application.
 
 Documentation:
 
+* [Repository (github.com)](https://github.com/zlosynth/heapnotize)
 * [API reference (docs.rs)]()
 * [Analysis of the source code]()
 
