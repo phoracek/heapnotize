@@ -27,10 +27,11 @@ Add this to your `Cargo.toml`:
 bitflags = "1.0"
 ```
 
-First of all, allocate space on the stack for `N` items of your type `T`:
+First of all, allocate space on the stack for `N` (8) items of your type `T`
+(`i32`):
 
 ``` rust
-let numbers = heapnotize::Rack::<i32, 16>::new()
+let numbers = heapnotize::Rack8::<i32>::new()
 ```
 
 Then we can add an item to this memory. The returned value will be a "pointer" on the stored value:
