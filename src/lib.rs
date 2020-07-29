@@ -1,30 +1,26 @@
-#![no_std]
+//#![no_std]
 
-use core::cell::Ref;
-use core::cell::RefCell;
+use core::cell::{RefCell, RefMut};
 
 #[derive(Debug)]
 pub struct Rack {
-    data: [(RefCell<bool>, RefCell<i32>); 2],
+    data: [RefCell<i32>; 2],
 }
 
 impl Rack {
     pub fn new() -> Self {
         Self {
-            data: [
-                (RefCell::new(false), RefCell::new(0)),
-                (RefCell::new(false), RefCell::new(0)),
-            ],
+            data: [RefCell::new(0), RefCell::new(0)],
         }
     }
 
     pub fn add(&self, value: i32) -> Unit {
-        for (taken, cell) in self.data.iter() {
-            if !*taken.borrow() {
-                taken.replace(true);
+        for cell in self.data.iter() {
+            // If we can borrow it, nobody has mutable reference -- it is free
+            if cell.try_borrow().is_ok() {
                 cell.replace(value);
                 return Unit {
-                    value: cell.borrow(),
+                    cell: cell.borrow_mut(),
                 };
             }
         }
@@ -40,12 +36,12 @@ impl Default for Rack {
 
 #[derive(Debug)]
 pub struct Unit<'a> {
-    value: Ref<'a, i32>,
+    cell: RefMut<'a, i32>,
 }
 
 impl Unit<'_> {
     pub fn value(&self) -> i32 {
-        *self.value
+        *self.cell
     }
 }
 
@@ -101,10 +97,5 @@ mod tests {
             let _unit2: Unit = rack.add(20);
         }
         let _unit3: Unit = rack.add(30);
-    }
-
-    #[test]
-    fn accept_more_units_once_old_ones_are_not_referenced_anymore() {
-        panic!("Not implemented")
     }
 }
