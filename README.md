@@ -25,7 +25,7 @@ Add this to your `Cargo.toml`:
 
 ``` toml
 [dependencies]
-bitflags = "1.0"
+heapnotize = "1.0"
 ```
 
 First of all, allocate space on the stack for `N` (8) items of your type `T`
