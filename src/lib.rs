@@ -1,6 +1,7 @@
-//#![no_std]
+#![no_std]
 
 use core::cell::{RefCell, RefMut};
+use core::mem::{self, MaybeUninit};
 
 #[derive(Debug)]
 pub struct Rack {
@@ -8,9 +9,30 @@ pub struct Rack {
 }
 
 impl Rack {
+    // TODO: Adopt lazy initialization
+    // https://doc.rust-lang.org/stable/std/mem/union.MaybeUninit.html#initializing-an-array-element-by-element
     pub fn new() -> Self {
         Self {
-            data: [RefCell::new(0), RefCell::new(0)],
+            data: {
+                // Create an uninitialized array of `MaybeUninit`. The `assume_init` is
+                // safe because the type we are claiming to have initialized here is a
+                // bunch of `MaybeUninit`s, which do not require initialization.
+                let mut data: [MaybeUninit<RefCell<i32>>; 2] =
+                    unsafe { MaybeUninit::uninit().assume_init() };
+
+                // Dropping a `MaybeUninit` does nothing. Thus using raw pointer
+                // assignment instead of `ptr::write` does not cause the old
+                // uninitialized value to be dropped. Also if there is a panic during
+                // this loop, we have a memory leak, but there is no memory safety
+                // issue.
+                for elem in &mut data[..] {
+                    *elem = MaybeUninit::new(RefCell::new(0));
+                }
+
+                // Everything is initialized. Transmute the array to the
+                // initialized type.
+                unsafe { mem::transmute::<_, [RefCell<i32>; 2]>(data) }
+            },
         }
     }
 
