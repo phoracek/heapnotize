@@ -7,5 +7,6 @@ categories = ["no-std"]
 license = "GPL-3.0-or-later"
 description = "A pointer type for array allocation. That's right, turn your stack into a heap."
 repository = "https://github.com/zlosynth/heapnotize"
+readme = "README.md"
 
 [dependencies]
