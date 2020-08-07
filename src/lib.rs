@@ -19,18 +19,25 @@ pub struct Rack {
 impl Rack {
     pub fn new() -> Self {
         Self {
+            // Initialize the whole array using MaybeUninit. It is not possible
+            // to initialize the whole array using [X; N] syntax since our X
+            // does not implement `Copy`.
+            // TODO: Use "Constants in array repeat expressions" once it is
+            // implemented.
+            // https://github.com/rust-lang/rust/issues/49147
             data: {
-                // Create an uninitialized array of `MaybeUninit`. The `assume_init` is
-                // safe because the type we are claiming to have initialized here is a
-                // bunch of `MaybeUninit`s, which do not require initialization.
+                // Create an uninitialized array of `MaybeUninit`. The
+                // `assume_init` is safe because the type we are claiming to
+                // have initialized here is a bunch of `MaybeUninit`s, which do
+                // not require initialization.
                 let mut data: [MaybeUninit<RefCell<MaybeUninit<i32>>>; 2] =
                     unsafe { MaybeUninit::uninit().assume_init() };
 
                 // Dropping a `MaybeUninit` does nothing. Thus using raw pointer
                 // assignment instead of `ptr::write` does not cause the old
-                // uninitialized value to be dropped. Also if there is a panic during
-                // this loop, we have a memory leak, but there is no memory safety
-                // issue.
+                // uninitialized value to be dropped. Also if there is a panic
+                // during this loop, we have a memory leak, but there is no
+                // memory safety issue.
                 for elem in &mut data[..] {
                     *elem = MaybeUninit::new(RefCell::new(MaybeUninit::uninit()));
                 }
@@ -44,7 +51,8 @@ impl Rack {
 
     pub fn add(&self, value: i32) -> Unit {
         for cell in self.data.iter() {
-            // If we can borrow it, nobody has a mutable reference, it is free to take
+            // If we can borrow it, nobody has a mutable reference, it is free
+            // to take.
             if cell.try_borrow().is_ok() {
                 cell.replace(MaybeUninit::new(value));
                 return Unit {
