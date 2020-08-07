@@ -116,7 +116,17 @@ mod tests {
 
         let unit: Unit = rack.add(10);
 
-        assert_eq!(unit.value(), 10)
+        assert_eq!(unit.value(), 10);
+    }
+
+    #[test]
+    fn dont_move_value_from_unit_on_get() {
+        let rack = Rack::new();
+
+        let unit: Unit = rack.add(10);
+
+        assert_eq!(unit.value(), 10);
+        assert_eq!(unit.value(), 10);
     }
 
     #[test]
