@@ -83,12 +83,11 @@ impl Unit<'_> {
     }
 }
 
+// The payload is carried inside `MaybeUninit`. `Drop` on `MaybeUninit` does not
+// do anything. Therefore, we have to implement the `Drop` trait, making sure
+// that a destructor is called on the carried payload.
 impl Drop for Unit<'_> {
     fn drop(&mut self) {
-        // The payload is carried inside `MaybeUninit`. `Drop` on `MaybeUninit`
-        // does not do anything. Therefore, we have to implement the `Drop`
-        // trait, making sure that a destructor is called on the carried
-        // payload.
         unsafe {
             ptr::drop_in_place(self.cell.as_mut_ptr());
         }
