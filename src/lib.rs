@@ -69,6 +69,8 @@ pub struct Unit<'a> {
 
 impl Unit<'_> {
     pub fn value(&self) -> i32 {
+        // This code is safe since we always populate the `MaybeUninit` with a
+        // value on `add` call before an `Unit` is returned.
         unsafe { self.cell.assume_init() }
     }
 }
