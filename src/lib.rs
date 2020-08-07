@@ -9,8 +9,6 @@ pub struct Rack {
 }
 
 impl Rack {
-    // TODO: Adopt lazy initialization
-    // https://doc.rust-lang.org/stable/std/mem/union.MaybeUninit.html#initializing-an-array-element-by-element
     pub fn new() -> Self {
         Self {
             data: {
@@ -38,7 +36,7 @@ impl Rack {
 
     pub fn add(&self, value: i32) -> Unit {
         for cell in self.data.iter() {
-            // If we can borrow it, nobody has mutable reference -- it is free
+            // If we can borrow it, nobody has a mutable reference, it is free to take
             if cell.try_borrow().is_ok() {
                 cell.replace(value);
                 return Unit {
