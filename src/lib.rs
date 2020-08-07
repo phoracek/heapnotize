@@ -12,7 +12,7 @@ pub struct Rack {
     // `Rack` immutable. That way we avoid issues with borrow checking.
     // The carried type is then enclosed in `MaybeUnit`, the reason for that we
     // don't need to require carried type to implement `Copy` and `Default` to
-    // populate the whole array.
+    // populate the whole array during `Rack`'s initialization.
     data: [RefCell<MaybeUninit<i32>>; 2],
 }
 
