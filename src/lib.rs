@@ -61,6 +61,12 @@ impl Unit<'_> {
         // value on `add` call before an `Unit` is returned.
         unsafe { &*self.cell.as_ptr() }
     }
+
+    pub fn get_mut(&mut self) -> &mut i32 {
+        // This code is safe since we always populate the `MaybeUninit` with a
+        // value on `add` call before an `Unit` is returned.
+        unsafe { &mut *self.cell.as_mut_ptr() }
+    }
 }
 
 // The payload is carried inside `MaybeUninit`. `Drop` on `MaybeUninit` does not
@@ -91,7 +97,7 @@ mod tests {
     }
 
     #[test]
-    fn get_reference_to_unit_value() {
+    fn get_immutable_reference_to_unit_value() {
         let rack = Rack::new();
 
         let unit: Unit = rack.add(10);
@@ -109,6 +115,27 @@ mod tests {
         let ref_2 = unit.get_ref();
 
         assert_eq!(ref_1, ref_2);
+    }
+
+    #[test]
+    fn get_mutable_reference_to_unit_value() {
+        let rack = Rack::new();
+
+        let mut unit: Unit = rack.add(10);
+
+        assert_eq!(*unit.get_mut(), 10);
+    }
+
+    #[test]
+    fn change_unit_value_through_mutable_reference() {
+        let rack = Rack::new();
+
+        let mut unit: Unit = rack.add(10);
+
+        let mut_ref = unit.get_mut();
+        *mut_ref = 20;
+
+        assert_eq!(*unit.get_ref(), 20);
     }
 
     #[test]
