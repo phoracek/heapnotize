@@ -3,6 +3,7 @@
 use core::cell::{RefCell, RefMut};
 use core::mem::MaybeUninit;
 use core::ops::Drop;
+use core::ops::{Deref, DerefMut};
 use core::ptr;
 
 #[derive(Debug)]
@@ -80,6 +81,20 @@ impl Drop for Unit<'_> {
     }
 }
 
+impl Deref for Unit<'_> {
+    type Target = i32;
+
+    fn deref(&self) -> &Self::Target {
+        self.get_ref()
+    }
+}
+
+impl DerefMut for Unit<'_> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.get_mut()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -127,6 +142,28 @@ mod tests {
     }
 
     #[test]
+    fn access_unit_value_by_dereferencing() {
+        let rack = Rack::new();
+
+        let unit: Unit = rack.add(10);
+
+        assert_eq!(*unit, 10);
+    }
+
+    #[test]
+    fn pass_immutable_unit_by_deref_coercion() {
+        fn assert_ref_i32_eq_10(num: &i32) {
+            assert_eq!(*num, 10)
+        }
+
+        let rack = Rack::new();
+
+        let unit: Unit = rack.add(10);
+
+        assert_ref_i32_eq_10(&unit)
+    }
+
+    #[test]
     fn change_unit_value_through_mutable_reference() {
         let rack = Rack::new();
 
@@ -136,6 +173,30 @@ mod tests {
         *mut_ref = 20;
 
         assert_eq!(*unit.get_ref(), 20);
+    }
+
+    #[test]
+    fn change_unit_value_by_mutable_dereferencing() {
+        let rack = Rack::new();
+
+        let mut unit: Unit = rack.add(10);
+        *unit = 20;
+
+        assert_eq!(*unit.get_ref(), 20);
+    }
+
+    #[test]
+    fn pass_mutable_unit_by_deref_coercion() {
+        fn assert_mut_ref_i32_editable(num: &mut i32) {
+            *num = 20;
+            assert_eq!(*num, 20)
+        }
+
+        let rack = Rack::new();
+
+        let mut unit: Unit = rack.add(10);
+
+        assert_mut_ref_i32_editable(&mut unit)
     }
 
     #[test]
