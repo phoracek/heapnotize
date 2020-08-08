@@ -56,10 +56,10 @@ pub struct Unit<'a> {
 }
 
 impl Unit<'_> {
-    pub fn value(&self) -> i32 {
+    pub fn get_ref(&self) -> &i32 {
         // This code is safe since we always populate the `MaybeUninit` with a
         // value on `add` call before an `Unit` is returned.
-        unsafe { self.cell.assume_init() }
+        unsafe { &*self.cell.as_ptr() }
     }
 }
 
@@ -91,22 +91,24 @@ mod tests {
     }
 
     #[test]
-    fn get_unit_value() {
+    fn get_reference_to_unit_value() {
         let rack = Rack::new();
 
         let unit: Unit = rack.add(10);
 
-        assert_eq!(unit.value(), 10);
+        assert_eq!(*unit.get_ref(), 10);
     }
 
     #[test]
-    fn dont_move_value_from_unit_on_get() {
+    fn get_multiple_immutable_references_to_unit_value() {
         let rack = Rack::new();
 
         let unit: Unit = rack.add(10);
 
-        assert_eq!(unit.value(), 10);
-        assert_eq!(unit.value(), 10);
+        let ref_1 = unit.get_ref();
+        let ref_2 = unit.get_ref();
+
+        assert_eq!(ref_1, ref_2);
     }
 
     #[test]
