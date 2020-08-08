@@ -6,6 +6,8 @@ use core::ops::Drop;
 use core::ops::{Deref, DerefMut};
 use core::ptr;
 
+mod data_array;
+
 #[derive(Debug)]
 pub struct Rack<T> {
     // All the stored units are kept inside `RefCell` to allow us to keep a
@@ -20,13 +22,7 @@ pub struct Rack<T> {
 impl<T> Rack<T> {
     pub fn new() -> Self {
         Self {
-            // TODO: Use "Constants in array repeat expressions" once it is
-            // implemented.
-            // https://github.com/rust-lang/rust/issues/49147
-            data: [
-                RefCell::new(MaybeUninit::uninit()),
-                RefCell::new(MaybeUninit::uninit()),
-            ],
+            data: data_array::init_2(),
         }
     }
 
