@@ -28,7 +28,6 @@ pub trait Rack<T> {
 
 macro_rules! rack {
     ($name:ident, $size:expr, $data_initializer:expr) => {
-        #[derive(Debug)]
         pub struct $name<T> {
             // All the stored units are kept inside `RefCell` to allow us to keep a
             // mutable reference to the data in multiple `Unit`s while keeping the
@@ -73,6 +72,15 @@ macro_rules! rack {
     };
 }
 rack!(Rack2, 2, data_array::init_2());
+rack!(Rack4, 4, data_array::init_4());
+rack!(Rack8, 8, data_array::init_8());
+rack!(Rack16, 16, data_array::init_16());
+rack!(Rack32, 32, data_array::init_32());
+rack!(Rack64, 64, data_array::init_64());
+rack!(Rack128, 128, data_array::init_128());
+rack!(Rack256, 256, data_array::init_256());
+rack!(Rack512, 512, data_array::init_512());
+rack!(Rack1024, 1024, data_array::init_1024());
 
 #[derive(Debug)]
 pub struct Unit<'a, T> {
