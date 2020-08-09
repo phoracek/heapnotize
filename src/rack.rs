@@ -1,6 +1,5 @@
 use core::cell::{RefCell, RefMut};
 use core::fmt;
-use core::iter::Iterator;
 use core::mem::MaybeUninit;
 use core::ops::Drop;
 use core::ops::{Deref, DerefMut};
@@ -21,52 +20,59 @@ impl fmt::Display for AddUnitError {
     }
 }
 
-#[derive(Debug)]
-pub struct Rack<T> {
-    // All the stored units are kept inside `RefCell` to allow us to keep a
-    // mutable reference to the data in multiple `Unit`s while keeping the
-    // `Rack` immutable. That way we avoid issues with borrow checking.
-    // The carried type is then enclosed in `MaybeUnit`, the reason for that we
-    // don't need to require carried type to implement `Copy` and `Default` to
-    // populate the whole array during `Rack`'s initialization.
-    data: [RefCell<MaybeUninit<T>>; 2],
+pub trait Rack<T> {
+    fn new() -> Self;
+    fn add(&self, value: T) -> Result<Unit<T>, AddUnitError>;
+    fn must_add(&self, value: T) -> Unit<T>;
 }
 
-impl<T> Rack<T> {
-    pub fn new() -> Self {
-        Self {
-            data: data_array::init_2(),
+macro_rules! rack {
+    ($name:ident, $size:expr, $data_initializer:expr) => {
+        #[derive(Debug)]
+        pub struct $name<T> {
+            // All the stored units are kept inside `RefCell` to allow us to keep a
+            // mutable reference to the data in multiple `Unit`s while keeping the
+            // `Rack` immutable. That way we avoid issues with borrow checking.
+            // The carried type is then enclosed in `MaybeUnit`, the reason for that we
+            // don't need to require carried type to implement `Copy` and `Default` to
+            // populate the whole array during `Rack`'s initialization.
+            data: [RefCell<MaybeUninit<T>>; $size],
         }
-    }
 
-    fn data_iter(&self) -> impl Iterator<Item = &RefCell<MaybeUninit<T>>> {
-        self.data.iter()
-    }
+        impl<T> Rack<T> for $name<T> {
+            fn new() -> Self {
+                Self {
+                    data: $data_initializer,
+                }
+            }
 
-    pub fn add(&self, value: T) -> Result<Unit<T>, AddUnitError> {
-        for cell in self.data_iter() {
-            // If we can borrow it, nobody has a mutable reference, it is free
-            // to take.
-            if cell.try_borrow().is_ok() {
-                cell.replace(MaybeUninit::new(value));
-                return Ok(Unit {
-                    cell: cell.borrow_mut(),
-                });
+            fn add(&self, value: T) -> Result<Unit<T>, AddUnitError> {
+                for cell in self.data.iter() {
+                    // If we can borrow it, nobody has a mutable reference, it is free
+                    // to take.
+                    if cell.try_borrow().is_ok() {
+                        cell.replace(MaybeUninit::new(value));
+                        return Ok(Unit {
+                            cell: cell.borrow_mut(),
+                        });
+                    }
+                }
+                Err(AddUnitError::FullRack)
+            }
+
+            fn must_add(&self, value: T) -> Unit<T> {
+                self.add(value).expect("The rack is full")
             }
         }
-        Err(AddUnitError::FullRack)
-    }
 
-    pub fn must_add(&self, value: T) -> Unit<T> {
-        self.add(value).expect("The rack is full")
-    }
+        impl<T> Default for $name<T> {
+            fn default() -> Self {
+                Self::new()
+            }
+        }
+    };
 }
-
-impl<T> Default for Rack<T> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+rack!(Rack2, 2, data_array::init_2());
 
 #[derive(Debug)]
 pub struct Unit<'a, T> {
@@ -118,19 +124,19 @@ mod tests {
 
     #[test]
     fn initialize_rack() {
-        let _rack: Rack<_> = Rack::<i32>::new();
+        let _rack: Rack2<_> = Rack2::<i32>::new();
     }
 
     #[test]
     fn add_unit_to_rack() {
-        let rack = Rack::<i32>::new();
+        let rack = Rack2::<i32>::new();
 
         let _unit: Unit<_> = rack.must_add(10);
     }
 
     #[test]
     fn get_immutable_reference_to_unit_value() {
-        let rack = Rack::new();
+        let rack = Rack2::new();
 
         let unit = rack.must_add(10);
 
@@ -139,7 +145,7 @@ mod tests {
 
     #[test]
     fn get_multiple_immutable_references_to_unit_value() {
-        let rack = Rack::new();
+        let rack = Rack2::new();
 
         let unit = rack.must_add(10);
 
@@ -151,7 +157,7 @@ mod tests {
 
     #[test]
     fn get_mutable_reference_to_unit_value() {
-        let rack = Rack::new();
+        let rack = Rack2::new();
 
         let mut unit = rack.must_add(10);
 
@@ -160,7 +166,7 @@ mod tests {
 
     #[test]
     fn access_unit_value_by_dereferencing() {
-        let rack = Rack::new();
+        let rack = Rack2::new();
 
         let unit = rack.must_add(10);
 
@@ -173,7 +179,7 @@ mod tests {
             assert_eq!(*num, 10)
         }
 
-        let rack = Rack::new();
+        let rack = Rack2::new();
 
         let unit = rack.must_add(10);
 
@@ -182,7 +188,7 @@ mod tests {
 
     #[test]
     fn change_unit_value_through_mutable_reference() {
-        let rack = Rack::new();
+        let rack = Rack2::new();
 
         let mut unit = rack.must_add(10);
 
@@ -196,7 +202,7 @@ mod tests {
     fn change_unit_struct_field_through_mutable_reference() {
         struct Foo(i32);
 
-        let rack = Rack::new();
+        let rack = Rack2::new();
 
         let mut unit = rack.must_add(Foo(10));
 
@@ -208,7 +214,7 @@ mod tests {
 
     #[test]
     fn change_unit_value_by_mutable_dereferencing() {
-        let rack = Rack::new();
+        let rack = Rack2::new();
 
         let mut unit = rack.must_add(10);
         *unit = 20;
@@ -223,7 +229,7 @@ mod tests {
             assert_eq!(*num, 20)
         }
 
-        let rack = Rack::new();
+        let rack = Rack2::new();
 
         let mut unit = rack.must_add(10);
 
@@ -232,7 +238,7 @@ mod tests {
 
     #[test]
     fn accept_up_to_the_limit() {
-        let rack = Rack::new();
+        let rack = Rack2::new();
 
         let _unit1 = rack.must_add(10);
         let _unit2 = rack.must_add(20);
@@ -241,7 +247,7 @@ mod tests {
     #[test]
     #[should_panic(expected = "The rack is full")]
     fn rejects_over_the_limit_with_panic_on_must_add() {
-        let rack = Rack::new();
+        let rack = Rack2::new();
 
         let _unit1 = rack.must_add(10);
         let _unit2 = rack.must_add(20);
@@ -250,7 +256,7 @@ mod tests {
 
     #[test]
     fn rejects_over_the_limit_with_error_on_add() {
-        let rack = Rack::new();
+        let rack = Rack2::new();
 
         let _unit1 = rack.add(10).unwrap();
         let _unit2 = rack.add(20).unwrap();
@@ -269,7 +275,7 @@ mod tests {
 
     #[test]
     fn accept_more_units_once_old_ones_get_out_of_scope() {
-        let rack = Rack::new();
+        let rack = Rack2::new();
 
         let _unit1 = rack.must_add(10);
         {
