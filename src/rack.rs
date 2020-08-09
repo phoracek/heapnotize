@@ -1,10 +1,24 @@
 use core::cell::{RefCell, RefMut};
+use core::fmt;
 use core::mem::MaybeUninit;
 use core::ops::Drop;
 use core::ops::{Deref, DerefMut};
 use core::ptr;
 
 use crate::data_array;
+
+#[derive(Debug)]
+pub enum AddUnitError {
+    FullRack,
+}
+
+impl fmt::Display for AddUnitError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Self::FullRack => write!(f, "the rack is full"),
+        }
+    }
+}
 
 #[derive(Debug)]
 pub struct Rack<T> {
@@ -24,18 +38,22 @@ impl<T> Rack<T> {
         }
     }
 
-    pub fn add(&self, value: T) -> Unit<T> {
+    pub fn add(&self, value: T) -> Result<Unit<T>, AddUnitError> {
         for cell in self.data.iter() {
             // If we can borrow it, nobody has a mutable reference, it is free
             // to take.
             if cell.try_borrow().is_ok() {
                 cell.replace(MaybeUninit::new(value));
-                return Unit {
+                return Ok(Unit {
                     cell: cell.borrow_mut(),
-                };
+                });
             }
         }
-        panic!("The rack is full");
+        Err(AddUnitError::FullRack)
+    }
+
+    pub fn must_add(&self, value: T) -> Unit<T> {
+        self.add(value).expect("The rack is full")
     }
 }
 
@@ -102,14 +120,14 @@ mod tests {
     fn add_unit_to_rack() {
         let rack = Rack::<i32>::new();
 
-        let _unit: Unit<_> = rack.add(10);
+        let _unit: Unit<_> = rack.must_add(10);
     }
 
     #[test]
     fn get_immutable_reference_to_unit_value() {
         let rack = Rack::new();
 
-        let unit = rack.add(10);
+        let unit = rack.must_add(10);
 
         assert_eq!(*unit.get_ref(), 10);
     }
@@ -118,7 +136,7 @@ mod tests {
     fn get_multiple_immutable_references_to_unit_value() {
         let rack = Rack::new();
 
-        let unit = rack.add(10);
+        let unit = rack.must_add(10);
 
         let ref_1 = unit.get_ref();
         let ref_2 = unit.get_ref();
@@ -130,7 +148,7 @@ mod tests {
     fn get_mutable_reference_to_unit_value() {
         let rack = Rack::new();
 
-        let mut unit = rack.add(10);
+        let mut unit = rack.must_add(10);
 
         assert_eq!(*unit.get_mut(), 10);
     }
@@ -139,7 +157,7 @@ mod tests {
     fn access_unit_value_by_dereferencing() {
         let rack = Rack::new();
 
-        let unit = rack.add(10);
+        let unit = rack.must_add(10);
 
         assert_eq!(*unit, 10);
     }
@@ -152,7 +170,7 @@ mod tests {
 
         let rack = Rack::new();
 
-        let unit = rack.add(10);
+        let unit = rack.must_add(10);
 
         assert_ref_i32_eq_10(&unit)
     }
@@ -161,7 +179,7 @@ mod tests {
     fn change_unit_value_through_mutable_reference() {
         let rack = Rack::new();
 
-        let mut unit = rack.add(10);
+        let mut unit = rack.must_add(10);
 
         let mut_ref = unit.get_mut();
         *mut_ref = 20;
@@ -175,7 +193,7 @@ mod tests {
 
         let rack = Rack::new();
 
-        let mut unit = rack.add(Foo(10));
+        let mut unit = rack.must_add(Foo(10));
 
         let mut_ref = unit.get_mut();
         mut_ref.0 = 20;
@@ -187,7 +205,7 @@ mod tests {
     fn change_unit_value_by_mutable_dereferencing() {
         let rack = Rack::new();
 
-        let mut unit = rack.add(10);
+        let mut unit = rack.must_add(10);
         *unit = 20;
 
         assert_eq!(*unit.get_ref(), 20);
@@ -202,7 +220,7 @@ mod tests {
 
         let rack = Rack::new();
 
-        let mut unit = rack.add(10);
+        let mut unit = rack.must_add(10);
 
         assert_mut_ref_i32_editable(&mut unit)
     }
@@ -211,28 +229,47 @@ mod tests {
     fn accept_up_to_the_limit() {
         let rack = Rack::new();
 
-        let _unit1 = rack.add(10);
-        let _unit2 = rack.add(20);
+        let _unit1 = rack.must_add(10);
+        let _unit2 = rack.must_add(20);
     }
 
     #[test]
     #[should_panic(expected = "The rack is full")]
-    fn reject_over_the_limit() {
+    fn rejects_over_the_limit_with_panic_on_must_add() {
         let rack = Rack::new();
 
-        let _unit1 = rack.add(10);
-        let _unit2 = rack.add(20);
-        let _unit3 = rack.add(30);
+        let _unit1 = rack.must_add(10);
+        let _unit2 = rack.must_add(20);
+        let _unit3 = rack.must_add(30);
+    }
+
+    #[test]
+    fn rejects_over_the_limit_with_error_on_add() {
+        let rack = Rack::new();
+
+        let _unit1 = rack.add(10).unwrap();
+        let _unit2 = rack.add(20).unwrap();
+
+        // Allow unreachable patterns in case more error types are added to
+        // AddUnitError, so the match would panic on the default arm.
+        #[allow(unreachable_patterns)]
+        match rack
+            .add(30)
+            .expect_err("Add to full stack should return an error")
+        {
+            AddUnitError::FullRack => (),
+            _ => panic!("Adding over limit returned unexpected error"),
+        };
     }
 
     #[test]
     fn accept_more_units_once_old_ones_get_out_of_scope() {
         let rack = Rack::new();
 
-        let _unit1 = rack.add(10);
+        let _unit1 = rack.must_add(10);
         {
-            let _unit2 = rack.add(20);
+            let _unit2 = rack.must_add(20);
         }
-        let _unit3 = rack.add(30);
+        let _unit3 = rack.must_add(30);
     }
 }
