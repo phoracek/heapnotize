@@ -1,5 +1,6 @@
 use core::cell::{RefCell, RefMut};
 use core::fmt;
+use core::iter::Iterator;
 use core::mem::MaybeUninit;
 use core::ops::Drop;
 use core::ops::{Deref, DerefMut};
@@ -38,8 +39,12 @@ impl<T> Rack<T> {
         }
     }
 
+    fn data_iter(&self) -> impl Iterator<Item = &RefCell<MaybeUninit<T>>> {
+        self.data.iter()
+    }
+
     pub fn add(&self, value: T) -> Result<Unit<T>, AddUnitError> {
-        for cell in self.data.iter() {
+        for cell in self.data_iter() {
             // If we can borrow it, nobody has a mutable reference, it is free
             // to take.
             if cell.try_borrow().is_ok() {
