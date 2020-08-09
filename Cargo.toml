@@ -3,10 +3,11 @@ name = "heapnotize"
 version = "0.1.0"
 authors = ["Petr Horacek <p.horacek94@gmail.com>"]
 edition = "2018"
-categories = ["no-std"]
+categories = ["no-std", "memory-management"]
 license = "GPL-3.0-or-later"
 description = "A pointer type for array allocation. That's right, turn your stack into a heap."
 repository = "https://github.com/zlosynth/heapnotize"
+documentation = "https://docs.rs/heapnotize"
 readme = "README.md"
 
 [dependencies]
