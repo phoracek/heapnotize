@@ -292,4 +292,22 @@ mod tests {
         }
         let _unit3 = rack.must_add(30);
     }
+
+    #[test]
+    fn measure_memory_overhead_of_rack() {
+        // Rounds up to 8 bytes and takes another 8 for MaybeUninit keept in
+        // RefCell.
+        // https://doc.rust-lang.org/core/mem/union.MaybeUninit.html#layout
+
+        use core::mem;
+
+        fn round_up_to_8(x: usize) -> usize {
+            x + 7 & !7
+        }
+
+        let item_size = mem::size_of::<[u8; 4]>();
+        let rack_size = mem::size_of::<Rack1<[u8; 4]>>();
+
+        assert_eq!(rack_size, round_up_to_8(item_size) + 8);
+    }
 }
