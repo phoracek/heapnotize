@@ -9,5 +9,3 @@ description = "A pointer type for array allocation. That's right, turn your stac
 repository = "https://github.com/zlosynth/heapnotize"
 documentation = "https://docs.rs/heapnotize"
 readme = "README.md"
-
-[dependencies]
