@@ -71,6 +71,7 @@ macro_rules! rack {
         }
     };
 }
+rack!(Rack1, 1, data_array::init_1());
 rack!(Rack2, 2, data_array::init_2());
 rack!(Rack4, 4, data_array::init_4());
 rack!(Rack8, 8, data_array::init_8());
