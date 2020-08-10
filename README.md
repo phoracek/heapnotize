@@ -1,70 +1,74 @@
-# heapnotize
+# Heapnotize
 
-Dynamic data allocation on the stack. That's right, no heap needed. Well, that
-is a little stretch.
+A Rust library providing memory allocation on the stack.
 
-**Everything below this line is just cheap talk outlining the future
-implementation, none of that is available.**
+Heapnotize can be used to store values somewhere in memory while keeping a
+reference to them. Like [`Box`](https://doc.rust-lang.org/std/boxed/index.html),
+it can be used for nested types for which indirection is required. Unlike `Box`,
+this library is implemented with `#[no_std]` and thus it can help with memory
+management on microcontrollers.
 
-In fact, this allows you to dedicate parts of stack as storage for maximum `N`
-of data types `T`.
-
-What is this good for you ask. It allows you to live without heap, i.e. with
-`#![no_std]` and thus help with memory management on microcontrollers. It may be
-also useful for predictable memory requirements of your application.
+The two main data types of Heapnotize are `Rack` and `Unit`. `Rack` is used to
+allocate predefined chunk of the stack for a predefined type. `Unit` provides an
+ownership for values stored there. `Unit` also ensures that once it goes out of
+scope, the value it refers to will be properly dropped.
 
 Documentation:
 
+* [API reference (docs.rs)](https://docs.rs/heapnotize)
 * [Repository (github.com)](https://github.com/zlosynth/heapnotize)
-* [API reference (docs.rs)]()
-* [Analysis of the source code]()
 
 ## Usage
 
-Add this to your `Cargo.toml`:
+Add the following to your `Cargo.toml`:
 
 ``` toml
 [dependencies]
 heapnotize = "1.0"
 ```
 
-First of all, allocate space on the stack for `N` (8) items of your type `T`
-(`i32`):
+In order to store values on the stack, we first need to initialize the `Rack`
+with a specific capacity. Available capacities are currently powers of 2 from 1
+up to 1024. The whole size will be allocated when a `Rack` is created. After
+that, it is possible to store values on the rack and get a handle on them as
+`Unit` object. It is the possible to derefence the `Unit` to get access to the
+value. Once the `Unit` gets out of scope, the value would be freed from the
+rack:
 
 ``` rust
-let numbers = heapnotize::Rack8::<i32>::new()
+fn main() {
+    let rack = Rack64::new();
+    let unit = rack.must_add(10);
+    assert_eq!(*unit, 10);
+}
 ```
 
-Then we can add an item to this memory. The returned value will be a "pointer" on the stored value:
+Where Heapnotize may become really handy is when dealing with recursive types,
+where a type contains a value of the same time. Rust cannot know how much memory
+a recursive type requires on compile time, therefore, indirection must be used.
+This is nicely covered in [The
+Book](https://doc.rust-lang.org/book/ch15-01-box.html#enabling-recursive-types-with-boxes)
+where `Box` is used to enable this, that however requires use of the heap.
+The following example shows how to handle recursive types on the stack using
+`Rack` and `Unit`:
 
 ``` rust
-let number_pointer = numbers.add(10) // Unit<i32>
+enum List<'a> {
+    Cons(i32, Unit<'a, List<'a>>),
+    Nil,
+}
+
+use List::{Cons, Nil};
+
+fn main() {
+    let rack = Rack64::new();
+    let list = Cons(1, rack.must_add(Cons(2, rack.must_add(Cons(3, rack.must_add(Nil))))));
+}
 ```
 
-The value can be accessed as a reference:
+See the [documentation](https://docs.rs/heapnotize) to learn more.
 
-``` rust
-let number_reference = number.as_ref() // &i32
-```
+# License
 
-A mutable reference:
-
-``` rust
-let number_mutable_reference = number.as_mut_ref() // &mut i32
-```
-
-We can also use dereference to move the value out of its unit:
-
-``` rust
-let number = *number // i32
-```
-
-When the value gets dereferenced or the unit gets out of scope, the memory will
-be freed.
-
-We can read capacity of the `Rack` and number of currently occupied slots:
-
-``` rust
-println!("numbers have currently occupied {} out of {} slots", numbers.used(), numbers.capacity())
-```
-
+Heapnotize is distributed under the terms of the General Public License
+version 3. See [LICENSE](LICENSE) for details.
