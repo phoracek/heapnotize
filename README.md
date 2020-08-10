@@ -17,6 +17,7 @@ Documentation:
 
 * [API reference (docs.rs)](https://docs.rs/heapnotize)
 * [Repository (github.com)](https://github.com/zlosynth/heapnotize)
+* [Crate (crates.io)](https://github.com/zlosynth/heapnotize)
 
 ## Usage
 
@@ -24,7 +25,7 @@ Add the following to your `Cargo.toml`:
 
 ``` toml
 [dependencies]
-heapnotize = "0.1"
+heapnotize = "0.2"
 ```
 
 In order to store values on the stack, we first need to initialize the `Rack`

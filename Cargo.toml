@@ -1,6 +1,6 @@
 [package]
 name = "heapnotize"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Petr Horacek <p.horacek94@gmail.com>"]
 edition = "2018"
 categories = ["no-std", "memory-management"]
