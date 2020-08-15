@@ -1,7 +1,7 @@
 [package]
 name = "heapnotize"
 version = "0.2.1"
-authors = ["Petr Horacek <hrck@protonmail.com>"]
+authors = ["Petr Horáček <hrck@protonmail.com>"]
 edition = "2018"
 categories = ["no-std", "memory-management"]
 keywords = ["memory-allocation", "smart-pointer", "stack"]
