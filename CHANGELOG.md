@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.0
+
+* Added API documentation covering all the features and usage.
+
 ## 0.2.1
 
 * Fix the version referenced in the README.
