@@ -73,3 +73,8 @@ See the [documentation](https://docs.rs/heapnotize) to learn more.
 
 Heapnotize is distributed under the terms of the General Public License
 version 3. See [LICENSE](LICENSE) for details.
+
+# Changelog
+
+Read the [CHANGELOG.md](CHANGELOG.md) to learn about changes introduced in each
+release.
