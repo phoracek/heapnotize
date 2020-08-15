@@ -1,4 +1,4 @@
-.PHONY: clean
+.PHONY: all
 all: format lint check test
 
 .PHONY: format
