@@ -1,11 +1,12 @@
 [package]
 name = "heapnotize"
 version = "0.2.1"
-authors = ["Petr Horacek <p.horacek94@gmail.com>"]
+authors = ["Petr Horacek <hrck@protonmail.com>"]
 edition = "2018"
 categories = ["no-std", "memory-management"]
+keywords = ["memory-allocation", "smart-pointer", "stack"]
 license = "GPL-3.0-or-later"
-description = "A pointer type for array allocation. That's right, turn your stack into a heap."
+description = "A smart pointer type for memory allocation on the stack."
 repository = "https://github.com/zlosynth/heapnotize"
 documentation = "https://docs.rs/heapnotize"
 readme = "README.md"
