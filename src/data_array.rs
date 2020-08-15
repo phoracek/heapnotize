@@ -1,8 +1,13 @@
+//! This generate library serves for initalization of [`Rack`](../trait.Rack.html)
+//! instances.
+//!
+//! This is not the most elegant solution, nor the most flexible one. Once
+//! [Const Generics](https://github.com/rust-lang/rust/issues/49147) are
+//! implemented, they will be used to implement `Rack` generic type with
+//! arbitrary length. Until then, this is the way to go.
+
 use core::cell::RefCell;
 use core::mem::MaybeUninit;
-
-// TODO: Use "Constants in array repeat expressions" once it is implemented.
-// https://github.com/rust-lang/rust/issues/49147
 
 pub fn init_1<T>() -> [RefCell<MaybeUninit<T>>; 1] {
     [RefCell::new(MaybeUninit::uninit())]
