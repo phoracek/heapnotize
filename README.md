@@ -25,7 +25,7 @@ Add the following to your `Cargo.toml`:
 
 ``` toml
 [dependencies]
-heapnotize = "1.0"
+heapnotize = "1.1"
 ```
 
 In order to store values on the stack, we first need to initialize the `Rack`

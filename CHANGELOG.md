@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.0
+
+* Moved the `new` constructor from trait implementation to struct implementation
+  in order to allow the `Rack` trait to be used as a `dyn` attribute.
+
 ## 1.0.0
 
 * Added API documentation covering all the features and usage.
