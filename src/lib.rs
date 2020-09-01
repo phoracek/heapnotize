@@ -110,18 +110,6 @@ impl fmt::Display for AddUnitError {
 ///
 /// **`capacity_of_the_rack * (round_up_to_the_closest_multiple_of_8(size_of(value)) + 8)`**
 pub trait Rack<T> {
-    /// Initialize a new Rack with a capacity based on the given implementation.
-    ///
-    /// # Examples
-    ///
-    /// Initialize a `Rack` holding up to 64 values of type `i32`:
-    ///
-    /// ```
-    /// # use heapnotize::*;
-    /// let rack = Rack64::<i32>::new();
-    /// ```
-    fn new() -> Self;
-
     /// Add a value to the `Rack` and return an error if it is full.
     ///
     /// # Errors
@@ -182,13 +170,25 @@ macro_rules! rack {
             data: [RefCell<MaybeUninit<T>>; $size],
         }
 
-        impl<T> Rack<T> for $name<T> {
-            fn new() -> Self {
+        impl<T> $name<T> {
+            /// Initialize a new Rack with a capacity based on the given implementation.
+            ///
+            /// # Examples
+            ///
+            /// Initialize a `Rack` holding up to 64 values of type `i32`:
+            ///
+            /// ```
+            /// # use heapnotize::*;
+            /// let rack = Rack64::<i32>::new();
+            /// ```
+            pub fn new() -> Self {
                 Self {
                     data: $data_initializer,
                 }
             }
+        }
 
+        impl<T> Rack<T> for $name<T> {
             fn add(&self, value: T) -> Result<Unit<T>, AddUnitError> {
                 for cell in self.data.iter() {
                     // If we can borrow it, nobody has a mutable reference, it is free
