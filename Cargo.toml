@@ -7,6 +7,6 @@ categories = ["no-std", "memory-management"]
 keywords = ["memory-allocation", "smart-pointer", "stack"]
 license = "GPL-3.0-or-later"
 description = "A smart pointer type for memory allocation on the stack."
-repository = "https://github.com/zlosynth/heapnotize"
+repository = "https://github.com/phoracek/heapnotize"
 documentation = "https://docs.rs/heapnotize"
 readme = "README.md"

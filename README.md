@@ -16,7 +16,7 @@ scope, the value it refers to will be properly dropped.
 Documentation:
 
 * [API reference (docs.rs)](https://docs.rs/heapnotize)
-* [Repository (github.com)](https://github.com/zlosynth/heapnotize)
+* [Repository (github.com)](https://github.com/phoracek/heapnotize)
 * [Crate (crates.io)](https://crates.io/crates/heapnotize)
 
 ## Usage
